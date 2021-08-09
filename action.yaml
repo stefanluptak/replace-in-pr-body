@@ -1,0 +1,39 @@
+name: "Replace specified text or pattern in the PR body"
+description: "Useful for pasting links of built artifacts to PR body"
+author: Štefan Ľupták
+branding:
+  icon: monitor
+  color: green
+inputs:
+  pattern:
+    description: "What to replace (can be a regex)"
+    required: true
+  replacement:
+    description: "Replace with this string"
+    required: true
+  github_token:
+    description: "GitHub token"
+    required: false
+    default: ${{ github.token }}
+
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      run: |
+        echo "Starting"
+        echo "Retrieving PR number"
+        pr_number=$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')
+        echo "PR number is $pr_number"
+        echo "Retrieving title and a body of a PR"
+        body="$(hub pr show -f '%t%n%n%b' $pr_number)"
+        echo -E "Original title and a body: $body"
+        body="$(echo -E "$body" | sed "s/$PATTERN/$REPLACEMENT/g")"
+        echo "Updated title and a body: $body"
+        echo "Updating it on the GitHub"
+        hub issue update $pr_number -m "$body"
+        echo "Updated successfully"
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        PATTERN: ${{ inputs.pattern }}
+        REPLACEMENT: ${{ inputs.replacement }}
