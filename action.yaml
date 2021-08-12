@@ -11,6 +11,9 @@ inputs:
   replacement:
     description: "Replace with this string"
     required: true
+  pr_number:
+    description: "Number of the PR to update, if it's not available through the $GITHUB_REF env var"
+    required: false
   github_token:
     description: "GitHub token"
     required: false
@@ -23,17 +26,19 @@ runs:
       run: |
         echo "Starting"
         echo "Retrieving PR number"
-        pr_number=$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')
-        echo "PR number is $pr_number"
+        GITHUB_REF_LAST_PART=$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')
+        PR_NUMBER=${PR_NUMBER-$GITHUB_REF_LAST_PART}
+        echo "PR number is $PR_NUMBER"
         echo "Retrieving title and a body of a PR"
-        body="$(hub pr show -f '%t%n%n%b' $pr_number)"
+        body="$(hub pr show -f '%t%n%n%b' $PR_NUMBER)"
         echo -E "Original title and a body: $body"
         body="$(echo -E "$body" | sed "s/$PATTERN/$REPLACEMENT/g")"
         echo "Updated title and a body: $body"
         echo "Updating it on the GitHub"
-        hub issue update $pr_number -m "$body"
+        hub issue update $PR_NUMBER -m "$body"
         echo "Updated successfully"
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
         PATTERN: ${{ inputs.pattern }}
         REPLACEMENT: ${{ inputs.replacement }}
+        PR_NUMBER: ${{ inputs.pr_number }}
