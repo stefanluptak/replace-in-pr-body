@@ -31,6 +31,8 @@ runs:
         echo "PR number is $PR_NUMBER"
         echo "PATTERN=$PATTERN"
         echo "REPLACEMENT=$REPLACEMENT"
+        REPLACEMENT=${REPLACEMENT//\//\\/}
+        echo "escaped REPLACEMENT=$REPLACEMENT"
         echo "Retrieving title and a body of a PR"
         body="$(hub pr show -f '%t%n%n%b' $PR_NUMBER)"
         echo -E "Original title and a body: $body"
