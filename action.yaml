@@ -36,7 +36,7 @@ runs:
         echo "Retrieving title and a body of a PR"
         body="$(hub pr show -f '%t%n%n%b' $PR_NUMBER)"
         echo -E "Original title and a body: $body"
-        body="$(echo -E "$body" | sed "s/$PATTERN/$REPLACEMENT/g")"
+        body="$(echo -E "$body" | sed -E "s/$PATTERN/$REPLACEMENT/g")"
         echo "Updated title and a body: $body"
         echo "Updating it on the GitHub"
         hub issue update $PR_NUMBER -m "$body"
